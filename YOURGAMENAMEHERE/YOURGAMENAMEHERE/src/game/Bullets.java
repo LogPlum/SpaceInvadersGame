@@ -1,39 +1,49 @@
 package game;
 
+/*
+CLASS: Game
+DESCRIPTION: A painted canvas in its own window, updated every tenth second.
+USAGE: Extended by YourGameName.
+NOTE: You don't need to understand the details here, no fiddling neccessary.*/
 import java.awt.*;
+import java.awt.event.*;
 
-public class Bullets extends Polygon implements GameObject{
-    private static final int SPEED = 5;
-    private boolean active = true;
-
-
-	public Bullets(Point inPosition) {
-		super(new Point[] { new Point(-2, -5), new Point(2, -5), 
-				new Point(2, 5), new Point(-2, 5)}, inPosition, 
-				0);
-		
+abstract class Game extends Canvas {
+  protected boolean on = true;
+  protected int width, height;
+  protected Image buffer;
+  
+	public Game(String name, int inWidth, int inHeight) {
+	  width = inWidth;
+	  height = inHeight;
+	  
+	  // Frame can be read as 'window' here.
+    Frame frame = new Frame(name);
+    frame.add(this);
+    frame.setSize(width,height);
+    frame.setVisible(true);
+    frame.setResizable(false);
+    frame.addWindowListener(new WindowAdapter() { 
+      public void windowClosing(WindowEvent e) {System.exit(0);} 
+    });
+    
+    buffer = createImage(width, height);
 	}
-
-	@Override
-	public void paint(Graphics brush) {
-		// TODO Auto-generated method stub
-		brush.setColor(Color.YELLOW);
-        Point[] points = getPoints();
-        int[] x = {(int) points[0].x, (int) points[1].x, (int) points[2].x, 
-        		(int) points[3].x};
-        int[] y = {(int) points[0].y, (int) points[1].y, (int) points[2].y, 
-        		(int) points[3].y};
-        brush.fillPolygon(x, y, 4);
-	}
-
-	@Override
-	public void move() {
-		// TODO Auto-generated method stub
-		position.y -= SPEED;
-		if(position.y < 0) { active = false; }
-	}
-	 public boolean isActive() {
-		 return active;
-	 }
-
+  
+  // 'paint' will be called every tenth of a second that the game is on.
+	abstract public void paint(Graphics brush);
+  
+  // 'update' paints to a buffer then to the screen, then waits a tenth of
+  // a second before repeating itself, assuming the game is on. This is done
+  // to avoid a choppy painting experience if repainted in pieces.
+  public void update(Graphics brush) {
+    paint(buffer.getGraphics());
+		brush.drawImage(buffer,0,0,this);
+    if (on) {sleep(10); repaint();}
+  }
+  
+  // 'sleep' is a simple helper function used in 'update'.
+  private void sleep(int time) {
+    try {Thread.sleep(time);} catch(Exception exc){};
+  }
 }
